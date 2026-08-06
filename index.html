@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Route — AI Design Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#0F1B2B;
+    --panel:#16283F;
+    --panel-raised:#1D3350;
+    --line:#2A3F5C;
+    --coral:#FF6B4A;
+    --teal:#2DD4B8;
+    --text:#F2F0E8;
+    --muted:#8FA3B8;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--canvas);
+    color:var(--text);
+    font-family:var(--body);
+    min-height:100vh;
+    padding:32px 20px 80px;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(45,212,184,0.07), transparent 40%),
+      radial-gradient(circle at 90% 100%, rgba(255,107,74,0.06), transparent 40%);
+  }
+  .wrap{max-width:920px; margin:0 auto;}
+  header{margin-bottom:36px;}
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--teal); display:flex; align-items:center; gap:8px; margin-bottom:14px;
+  }
+  .eyebrow::before{content:"●"; color:var(--coral); font-size:9px;}
+  h1{
+    font-family:var(--display); font-weight:700; font-size:clamp(28px,4vw,40px);
+    letter-spacing:-0.01em; line-height:1.1;
+  }
+  h1 span{color:var(--muted); font-weight:400;}
+  .sub{color:var(--muted); font-size:15px; margin-top:10px; max-width:560px; line-height:1.5;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:20px;}
+  label{
+    display:block; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:8px;
+  }
+  textarea{
+    width:100%; background:var(--canvas); border:1px solid var(--line); border-radius:10px;
+    color:var(--text); font-family:var(--body); font-size:14.5px; padding:12px 14px; resize:vertical;
+    min-height:64px; line-height:1.5;
+  }
+  textarea:focus{outline:none; border-color:var(--teal);}
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .hint{font-size:12px; color:var(--muted); margin-top:6px;}
+  .actions{display:flex; align-items:center; gap:14px; margin-top:4px;}
+  button.run{
+    background:var(--coral); color:#1A0E0A; border:none; font-family:var(--display); font-weight:600;
+    font-size:14.5px; padding:12px 22px; border-radius:9px; cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button.run:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(255,107,74,0.25);}
+  button.run:disabled{opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none;}
+  .status{font-family:var(--mono); font-size:12px; color:var(--teal); min-height:16px;}
+  .route{position:relative; margin-top:8px;}
+  .route::before{
+    content:""; position:absolute; left:19px; top:8px; bottom:8px; width:2px;
+    background:repeating-linear-gradient(to bottom, var(--line) 0 6px, transparent 6px 12px);
+  }
+  .stop{position:relative; padding-left:56px; margin-bottom:26px;}
+  .stop:last-child{margin-bottom:0;}
+  .pin{
+    position:absolute; left:0; top:0; width:40px; height:40px; border-radius:50%;
+    background:var(--panel-raised); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:600; font-size:13px; color:var(--teal);
+  }
+  .stop-title{font-family:var(--display); font-weight:600; font-size:18px; margin-bottom:4px;}
+  .stop-desc{color:var(--muted); font-size:13px; margin-bottom:14px;}
+  .cards{display:grid; gap:12px;}
+  .card{background:var(--panel-raised); border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .card h3{font-family:var(--display); font-size:15px; font-weight:600; margin-bottom:6px; color:var(--text);}
+  .card p{font-size:13.5px; line-height:1.55; color:var(--muted);}
+  .tag{
+    display:inline-block; font-family:var(--mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--coral); border:1px solid rgba(255,107,74,0.35); padding:2px 8px; border-radius:20px; margin-bottom:10px;
+  }
+  .copy-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;}
+  .copy-variant{background:var(--canvas); border:1px solid var(--line); border-radius:8px; padding:10px 12px;}
+  .copy-variant .k{font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:4px;}
+  .copy-variant .v{font-size:13.5px; color:var(--text); font-weight:500;}
+  @media (max-width:560px){ .copy-row{grid-template-columns:1fr;} }
+  .action-item{display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px;}
+  .action-item:last-child{border-bottom:none;}
+  .sev{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.05em; padding:2px 7px; border-radius:5px;
+    flex-shrink:0; margin-top:1px; text-transform:uppercase;
+  }
+  .sev.high{background:rgba(255,107,74,0.15); color:var(--coral);}
+  .sev.medium{background:rgba(45,212,184,0.15); color:var(--teal);}
+  .sev.low{background:rgba(143,163,184,0.15); color:var(--muted);}
+  .empty{color:var(--muted); font-size:13.5px; font-style:italic;}
+  footer{margin-top:40px; color:var(--muted); font-size:12px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Design Companion — for mobility &amp; delivery product teams</div>
+    <h1>Route<span> · brief in, three stops out.</span></h1>
+    <p class="sub">Describe a screen or feature — a ride confirmation, a delivery tracker, an onboarding step — and Route plans a path from idea to shippable UI: layout directions, copy variants, and (if you paste feedback) a prioritized fix list.</p>
+  </header>
+
+  <div class="panel">
+    <div class="field">
+      <label>Screen or feature brief</label>
+      <textarea id="brief" placeholder="e.g. A ride-booking confirmation screen for a super-app...">A post-ride rating screen for a ride-hailing app. Rider just finished a trip and needs to rate the driver, optionally leave a tip, and report an issue if something went wrong — without it feeling like a chore.</textarea>
+    </div>
+    <div class="field">
+      <label>Usability feedback to summarize <span style="color:var(--muted); text-transform:none; font-weight:400;">(optional)</span></label>
+      <textarea id="feedback" placeholder="Paste raw notes from user testing, app reviews, or support tickets...">Users kept saying the rating screen felt like a chore. Three testers didn't notice the tip field at all — it was below the fold. One said "why do I have to rate before I can close the app?" Two mentioned they wanted to rate later, not right after the ride. The "report an issue" button looks identical to "submit rating" so a couple people tapped the wrong one by mistake. Android testers said the star icons were too small to tap accurately on a moving car (phone in hand while walking).</textarea>
+      <div class="hint">Leave blank to skip the feedback stop.</div>
+    </div>
+    <div class="actions">
+      <button class="run" id="runBtn">Plan the route</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>Built by [Your Name] · frontend on Vercel, AI calls proxied through a serverless function (key never exposed) · <a href="https://github.com/YOUR_USERNAME/design-companion" style="color:var(--teal);">source on GitHub</a></footer>
+</div>
+
+<script>
+const runBtn = document.getElementById('runBtn');
+const statusEl = document.getElementById('status');
+const output = document.getElementById('output');
+
+async function callApi(mode, payload) {
+  const res = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode, ...payload })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function stopTemplate(num, title, desc, innerHtml){
+  return `
+    <div class="stop">
+      <div class="pin">${num}</div>
+      <div class="stop-title">${title}</div>
+      <div class="stop-desc">${desc}</div>
+      ${innerHtml}
+    </div>
+  `;
+}
+
+function renderError(msg){
+  output.innerHTML = `<div class="panel"><p class="empty">${msg}</p></div>`;
+}
+
+async function run(){
+  const brief = document.getElementById('brief').value.trim();
+  const feedback = document.getElementById('feedback').value.trim();
+
+  if(!brief){
+    statusEl.textContent = "Add a brief first";
+    statusEl.style.color = "var(--coral)";
+    return;
+  }
+
+  runBtn.disabled = true;
+  statusEl.style.color = "var(--teal)";
+  statusEl.textContent = "Sketching layout directions…";
+  output.innerHTML = "";
+
+  try {
+    const ideas = await callApi('ideas', { brief });
+
+    let html = `<div class="route">`;
+
+    html += stopTemplate(1, "Layout directions", "Three distinct approaches to structuring this screen.",
+      `<div class="cards">${ideas.layouts.map(l => `
+        <div class="card"><h3>${l.title}</h3><p>${l.description}</p></div>
+      `).join('')}</div>`);
+
+    html += stopTemplate(2, "UI copy variants", "Two directions per element — pick, mix, or use as a starting point.",
+      `<div class="cards">${ideas.copy.map(c => `
+        <div class="card">
+          <div class="tag">${c.element}</div>
+          <div class="copy-row">
+            <div class="copy-variant"><span class="k">Variant A</span><span class="v">${c.variant_a}</span></div>
+            <div class="copy-variant"><span class="k">Variant B</span><span class="v">${c.variant_b}</span></div>
+          </div>
+        </div>
+      `).join('')}</div>`);
+
+    output.innerHTML = html + `</div>`;
+
+    if(feedback){
+      statusEl.textContent = "Reading usability feedback…";
+      const fb = await callApi('feedback', { feedback });
+
+      const fbHtml = stopTemplate(3, "Feedback → action items", "Prioritized, ready to hand to engineering or drop into a ticket.",
+        `<div class="panel" style="padding:6px 18px;">${fb.actionItems.map(a => `
+          <div class="action-item">
+            <span class="sev ${a.severity}">${a.severity}</span>
+            <span><strong>${a.issue}.</strong> ${a.fix}</span>
+          </div>
+        `).join('')}</div>`);
+
+      output.innerHTML = `<div class="route">` + html.replace('<div class="route">','').replace('</div>','') + fbHtml + `</div>`;
+    }
+
+    statusEl.textContent = "Done";
+    statusEl.style.color = "var(--teal)";
+  } catch(err){
+    console.error(err);
+    renderError("Something went wrong: " + err.message);
+    statusEl.textContent = "Error";
+    statusEl.style.color = "var(--coral)";
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+runBtn.addEventListener('click', run);
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "design-companion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI design companion prototype — layout brainstorming, UI copy generation, and usability feedback summarization for mobility/delivery product screens.",
+  "engines": {
+    "node": ">=18"
+  }
+}
