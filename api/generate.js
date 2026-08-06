@@ -2,7 +2,7 @@
 // The Gemini API key lives only here, read from an environment variable.
 // The frontend (public site) never sees it.
 
-const MODEL = "gemini-2.5-flash-lite"; // active free-tier model
+const MODEL = "gemini-3.5-flash-lite"; // GA, free-tier eligible as of Aug 2026
                                    // for the current free-tier model id if this one is retired.
 
 const IDEAS_SYSTEM = `You are a senior product design partner for a ride-hailing / delivery super-app (like Careem). Given a screen brief, respond with ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
